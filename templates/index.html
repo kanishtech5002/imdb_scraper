@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMDb Top 250 Movies Scraper & Dashboard</title>
+    
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Link to custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Top Decorative Line -->
+    <div class="top-accent-bar"></div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <span class="imdb-logo">IMDb</span>
+                <span class="logo-text">Top 250</span>
+            </div>
+            <div class="header-tagline">Professional Web Scraping & Data Analysis</div>
+        </div>
+    </header>
+
+    <main class="app-container">
+        <!-- Hero & Action Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">IMDb Top 250 Movies Scraper</h1>
+                <p class="hero-subtitle">
+                    Automate data extraction from IMDb's official Top 250 chart. Extract title, rank, rating, and release year in real-time, compute analytics, and export directly as clean CSV.
+                </p>
+                <div class="hero-actions">
+                    <button id="btn-scrape" class="btn btn-primary">
+                        <svg class="icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        <span class="btn-text">Scrape Movies</span>
+                        <div class="loader-spinner hidden" id="scrape-loader"></div>
+                    </button>
+                    
+                    <a href="/download" id="btn-download" class="btn btn-secondary disabled-link" tabindex="-1">
+                        <svg class="icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                        </svg>
+                        <span>Download CSV</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notification Toast System -->
+        <div id="notification" class="notification hidden">
+            <div class="notification-content">
+                <div class="notification-icon" id="notification-icon"></div>
+                <div class="notification-message" id="notification-message">Welcome! Click "Scrape Movies" to fetch data.</div>
+            </div>
+            <button class="notification-close" id="notification-close">&times;</button>
+        </div>
+
+        <!-- Dashboard Statistics Cards -->
+        <section class="dashboard-section">
+            <div class="section-header">
+                <h2 class="section-title">Analytics Dashboard</h2>
+                <span class="badge" id="stats-status">No Data Loaded</span>
+            </div>
+            
+            <div class="stats-grid">
+                <!-- Total Movies Card -->
+                <div class="stat-card" id="card-total">
+                    <div class="card-glow red"></div>
+                    <div class="stat-icon-wrapper red">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+                            <line x1="7" y1="2" x2="7" y2="22"/>
+                            <line x1="17" y1="2" x2="17" y2="22"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <line x1="2" y1="7" x2="7" y2="7"/>
+                            <line x1="2" y1="17" x2="7" y2="17"/>
+                            <line x1="17" y1="17" x2="22" y2="17"/>
+                            <line x1="17" y1="7" x2="22" y2="7"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Movies Scraped</span>
+                        <h3 class="stat-value" id="val-total">0</h3>
+                    </div>
+                </div>
+
+                <!-- Highest Rated Movie Card -->
+                <div class="stat-card" id="card-highest">
+                    <div class="card-glow yellow"></div>
+                    <div class="stat-icon-wrapper yellow">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Highest Rated Movie</span>
+                        <h3 class="stat-value small-text" id="val-highest">-</h3>
+                    </div>
+                </div>
+
+                <!-- Average Rating Card -->
+                <div class="stat-card" id="card-average">
+                    <div class="card-glow blue"></div>
+                    <div class="stat-icon-wrapper blue">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Average IMDb Rating</span>
+                        <h3 class="stat-value" id="val-average">0.0</h3>
+                    </div>
+                </div>
+
+                <!-- Oldest Movie Card -->
+                <div class="stat-card" id="card-oldest">
+                    <div class="card-glow green"></div>
+                    <div class="stat-icon-wrapper green">
+                        <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Oldest Movie in List</span>
+                        <h3 class="stat-value small-text" id="val-oldest">-</h3>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Movie Data Section -->
+        <section class="data-section">
+            <div class="data-controls">
+                <div class="search-box">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search movie by title..." disabled>
+                </div>
+                <div class="results-count" id="results-count">
+                    Showing 0 of 0 movies
+                </div>
+            </div>
+
+            <!-- Table Wrapper for Responsiveness -->
+            <div class="table-container">
+                <table class="movie-table" id="movie-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable active" data-sort="Rank">
+                                Rank 
+                                <span class="sort-indicator" id="sort-Rank">▲</span>
+                            </th>
+                            <th class="sortable" data-sort="Movie Title">
+                                Movie Title 
+                                <span class="sort-indicator" id="sort-Title"></span>
+                            </th>
+                            <th class="sortable text-center" data-sort="Release Year">
+                                Release Year 
+                                <span class="sort-indicator" id="sort-Year"></span>
+                            </th>
+                            <th class="sortable text-center" data-sort="IMDb Rating">
+                                Rating 
+                                <span class="sort-indicator" id="sort-Rating"></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="movie-tbody">
+                        <tr class="empty-state-row">
+                            <td colspan="4" class="text-center">
+                                <div class="empty-state">
+                                    <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="8" x2="12" y2="12"/>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    </svg>
+                                    <p>No data loaded yet. Click the <strong>Scrape Movies</strong> button at the top to start scraping.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Panel -->
+            <div class="pagination-container hidden" id="pagination-panel">
+                <button class="btn btn-pagination" id="btn-prev" aria-label="Previous Page">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon pag-icon">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    <span>Prev</span>
+                </button>
+                
+                <div class="pagination-pages" id="pagination-numbers">
+                    <!-- Dynamic page numbers generated by JS -->
+                </div>
+
+                <button class="btn btn-pagination" id="btn-next" aria-label="Next Page">
+                    <span>Next</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon pag-icon">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 IMDb Top 250 Movies Scraper. Generated with Premium Python Flask, Selenium, and Vanilla CSS.</p>
+            <p>Designed and Built in Planning Mode.</p>
+        </div>
+    </footer>
+
+    <!-- Link to Custom JavaScript -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
