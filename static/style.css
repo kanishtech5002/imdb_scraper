@@ -729,6 +729,9 @@ body {
     font-size: 0.9rem;
     font-weight: 500;
     line-height: 1.4;
+    word-break: break-word;
+    max-height: 180px;
+    overflow-y: auto;
 }
 
 .notification-close {

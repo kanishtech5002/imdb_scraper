@@ -1,13 +1,20 @@
-
 import os
 import pandas as pd
 from flask import Flask, render_template, jsonify, send_file
-from scraper import scrape_imdb_top_250
+from scraper import scrape_imdb_top_250, FALLBACK_CSV_PATH
 
 app = Flask(__name__)
 
-# Vercel writable temporary directory
-DOWNLOADS_DIR = "/tmp"
+# Use /tmp on Vercel; otherwise use the local 'downloads' folder
+if os.environ.get("VERCEL"):
+    DOWNLOADS_DIR = "/tmp"
+else:
+    DOWNLOADS_DIR = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "downloads"
+    )
+
+os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 CSV_PATH = os.path.join(
     DOWNLOADS_DIR,
     "imdb_top_250_movies.csv"
@@ -52,7 +59,7 @@ def scrape():
                 "message": f"Missing columns: {missing}"
             }), 500
 
-        # Save CSV to writable temporary storage
+        # Save CSV to writable storage
         df.to_csv(CSV_PATH, index=False)
 
         # Dashboard statistics
@@ -72,7 +79,7 @@ def scrape():
             )
 
             average_rating = round(
-                ratings.mean(), 2
+                float(ratings.mean()), 2
             )
         else:
             highest_rated = "N/A"
@@ -106,28 +113,28 @@ def scrape():
             }
         })
 
-    except Exception:
+    except Exception as exc:
         app.logger.exception("Scraping failed")
 
         return jsonify({
             "status": "error",
-            "message": (
-                "Scraping failed. Check Vercel "
-                "Function Logs for details."
-            )
+            "message": f"Scraping failed: {str(exc)}"
         }), 500
 
 
 @app.route("/download")
 def download():
-    if not os.path.exists(CSV_PATH):
+    # If the user-scraped CSV exists, serve it; otherwise check fallback CSV
+    target_path = CSV_PATH if os.path.exists(CSV_PATH) else FALLBACK_CSV_PATH
+
+    if not os.path.exists(target_path):
         return (
             "No CSV available. Scrape movies first.",
             404
         )
 
     return send_file(
-        CSV_PATH,
+        target_path,
         mimetype="text/csv",
         as_attachment=True,
         download_name="imdb_top_250_movies.csv"
