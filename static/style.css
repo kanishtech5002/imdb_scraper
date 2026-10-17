@@ -768,6 +768,11 @@ body {
     text-align: center;
 }
 
+.footer-highlight {
+    color: #F5C518;
+    font-weight: 600;
+}
+
 /* Responsiveness tweaks */
 @media (max-width: 600px) {
     .app-container {
